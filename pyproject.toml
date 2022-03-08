@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "pyvizbee"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "a dualtext alingner based on holoviz panel"
 authors = ["ffreemt"]
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ffreemt/vizbee"
+include = ["LICENSE"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
