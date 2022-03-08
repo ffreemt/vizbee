@@ -3,15 +3,19 @@
 
 a dualtext aligner based on holoviz panel
 
-## Install it
-
-```shell
-pip install git+htts://github.com/ffreemt/vizbee
-# poetry add git+htts://github.com/ffreemt/pyvizbee
+## Use it
+### `git clone`
+```bash
+git clone https://github.com/ffreemt/vizbee
+cd vizbee
+poetry install  # or pip install requirements.txt
+poetry shell
+panel serve vizbee/vizbee.py
 ```
 
-## Use it
+### `pypi`
 ```shell
-**NOTREADY** python -m panel serve pyvizbee
+**NOTREADY** pip install pyvizbee
+python -m pyvizbee
 
 ```

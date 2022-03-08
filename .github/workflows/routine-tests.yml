@@ -8,10 +8,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.8]
         poetry-version: [1.1.2]
         os: [ubuntu-18.04, windows-latest]
-        # os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -33,10 +32,10 @@ jobs:
           # poetry run pytest tests/test_model_s.py  # OK
           # poetry run pytest tests/test_load_model_model_l.py
           if [ "$RUNNER_OS" == "Linux" ]; then
-            # poetry run pytest tests -k sanity
-            echo pass
+            poetry run pytest tests
+            # echo pass
           elif [ "$RUNNER_OS" == "Windows" ]; then
-            poetry run pytest tests -k sanity
+            poetry run pytest tests
           else
               echo "$RUNNER_OS not supported"
               exit 1
