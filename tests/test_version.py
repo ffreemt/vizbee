@@ -1,5 +1,5 @@
 """Test versioin."""
-from vizbee import __version__
+from pyvizbee import __version__
 
 def test_version():
     """Test version."""

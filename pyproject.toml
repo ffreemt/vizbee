@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "vizbee"
+name = "pyvizbee"
 version = "0.1.0"
 description = "a dualtext alingner based on holoviz panel"
 authors = ["ffreemt"]
