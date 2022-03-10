@@ -1,0 +1,25 @@
+"""Ready tab1.
+
+combined in __main__.py since we need global file1 file2
+"""
+# pylint: disable=invalid-name
+
+import panel as pn
+import param
+
+file1 = None
+file2 = None
+
+
+def load_text_widget(event=param.parameterized.Event):
+    """Ready tab1."""
+    global file1, file2
+    file1 = pn.widgets.FileInput(accept=".txt,.csv,.tsv")
+    file2 = pn.widgets.FileInput(accept=".txt,.csv,.tsv")
+    return pn.Column(
+        # "Load text",
+        # pn.Row(file1, file2),
+        # sizing_mode="fixed",
+        file1,
+        file2,
+    )

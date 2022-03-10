@@ -1,0 +1,51 @@
+"""Ready tab2 widget."""
+import pandas as pd
+import panel as pn
+import param
+from logzero import logger
+
+# from pyvizbee.load_text_widget import file1, file2
+
+# would result in circular imports
+# from pyvizbee.__main__ import file1, file2
+
+
+def display_text_widget(event=param.parameterized.Event):
+    """Ready tab2."""
+    logger.debug(" file1 defined: %s", "file1" in globals())
+    logger.debug(" file2 defined: %s", "file2" in globals())
+
+    logger.debug(" file1 is None: %s", file1 is None)
+
+    if file1 is not None and file1.value is not None:
+        logger.debug(" file1.value is not None: %s", file1.value is not None)
+
+        logger.debug(" file1.value[:10]: %s", file.value[:10])
+        logger.debug(" file1.filename: %s", file1.filename)
+
+        df = pd.read_csv(io.BytesIO(file1.value))
+        df_pane = pn.pane.DataFrame(df, width=400)
+
+        logger.debug("df: %s", df)
+
+        # return pn.Row(file1, file2)
+        return pn.Column(
+            pn.Row(file1, file2),
+            df_pane,
+        )
+
+    # if "file1" in global() and "file2" in gloabls():
+    if {"file1", "file2"} <= globals().keys():
+        return pn.Column(
+            pn.Row(file1, file2),
+        )
+
+    if "file1" in globals():
+        return pn.Column(
+            pn.Row(file1),
+        )
+
+    if "file2" in globals():
+        return pn.Column(
+            pn.Row(file2),
+        )
