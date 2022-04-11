@@ -19,6 +19,8 @@ pandas = "^1.4.1"
 cchardet = "^2.1.7"
 logzero = "^1.7.0"
 environs = "^9.5.0"
+numpy = "^1.22.3"
+unsync = "^1.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
