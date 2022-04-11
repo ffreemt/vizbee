@@ -271,6 +271,11 @@ def s_cb_params(event=param.parameterized.Event):
     xlabel = "x"
     ylabel = "y"
 
+    if ns.df is None:
+        tab = pn.Column(" Load files first...")
+        template.main[0].objects = [tab]
+        return
+
     _ =  [elm for elm in ns.df.text1.to_list() if elm.strip()]
     cmat = gen_cmat(_, ns.df.text2.to_list())
 
