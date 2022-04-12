@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import Union  # noqa
 
 import cchardet
-
 # import pytest
 from logzero import logger
 
