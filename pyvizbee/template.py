@@ -1,52 +1,46 @@
 """Set up template."""
 # pylint: disable=unused-argument, unused-import, too-many-locals, too-many-statements
+
 import os
 import time
 from itertools import zip_longest
 from pathlib import Path
-from pprint import pprint
+# from pprint import pprint
 from textwrap import dedent
+# from types import SimpleNamespace
 from typing import List
-import cchardet as chardet
 
+import cchardet as chardet
 import logzero
 import numpy as np
 import pandas as pd
 import panel as pn
 import param
-
-from types import SimpleNamespace
 from bokeh.models.widgets.tables import TextEditor
-from logzero import logger
-from unsync import unsync
-
 from cmat2aset import cmat2aset
 from fast_scores.gen_cmat import gen_cmat
+from logzero import logger
+from unsync import unsync
 
 from pyvizbee import __version__
 from pyvizbee.loadtext import loadtext
 from pyvizbee.loglevel import loglevel
 
-file1 = pn.widgets.FileInput(accept=".txt,.csv,.tsv")
-file2 = pn.widgets.FileInput(accept=".txt,.csv,.tsv")
+from pyvizbee.align_ns_df import align_ns_df
+from pyvizbee.ns import ns, DEFAULT_EPS, DEFAULT_MIN_SAMPLES
 
-DEFAULT_EPS = 10
-DEFAULT_MIN_SAMPLES = 6
-
-# workspace namespace: similar to global()
-ns = SimpleNamespace(
-    **{
-        "counter": 0,
-        "df": None,
-        "df_pane": None,
-        "eps": DEFAULT_EPS,  # Two points are considered neighbors if the distance between the two points is below eps
-        "min_samples": DEFAULT_MIN_SAMPLES,  # The minimum number of neighbors a given point should have in order to be classified as a core point.
-    }
+from pyvizbee.button_cb_save_tsv import (
+    button_save_tsv,
+    # cb_save_tsv,
+)
+from pyvizbee.button_cb_show_nsdf import (
+    button_show_nsdf,
+    # cb_save_tsv,
 )
 
 VIZBEE_DEV = os.environ.get("VIZBEE_DEV")
 
-_ = """
+_ = r"""
 # better set PYTHONPATH=..\ezbee;..\fast-scores;..\cmat2aset
 if VIZBEE_DEV:
     # from icecream import ic
@@ -97,11 +91,11 @@ def gen_df():
     """
     # global file1, file2
 
-    list1 = filevalue2list(file1.value)
-    list2 = filevalue2list(file2.value)
+    list1 = filevalue2list(ns.file1.value)
+    list2 = filevalue2list(ns.file2.value)
 
-    logger.debug("list1: %s", list1)
-    logger.debug("list2: %s", list2)
+    logger.debug("list1[:10]: %s", list1[:10])
+    logger.debug("list2[:10]: %s", list2[:10])
 
     if VIZBEE_DEV:
         # set default during dev
@@ -117,8 +111,26 @@ def gen_df():
         columns=["text1", "text2", "metric"],
     )
 
-    ns.df.insert(0, "seq", range(1, 1 + len(ns.df)))
-    ns.df = ns.df.set_index("seq")
+    # ns.df.insert(0, "seq", range(1, 1 + len(ns.df)))
+    # ns.df = ns.df.set_index("seq")
+    # ns.df.index = [*range(1, 1 + len(ns.df))]
+    # ns.df.index += 1
+    ns.df.index.name = "seq"
+
+    _ = """
+    try:
+        ns.lang1, *_ = fastlid(list1)
+        ns.lang2, *_ = fastlid(list2)
+    except Exception:
+        logger.exception(" ns.langx, *_ = fastlid(listx)")
+        loggerinfo("Continue and hope for the best...")
+
+    # also gen model
+    if ns.lang1 in ["en"]:
+        l1
+    try:
+        ns.model = gen_model(
+    # """
 
     return ns.df
 
@@ -164,13 +176,29 @@ def cb_toggle_params(event=param.parameterized.Event):
 
 
 def cb_align(event=param.parameterized.Event):
-    """Callback to align (in tab3)."""
+    """Callback to align (in tab3): button_align.on_click(cb_align)."""
     logger.debug("cb_align")
-    ...
+
+    # process ns.df: align_ns_df
+    try:
+        ns.df = align_ns_df(ns.df, ns.model)
+        # ns.df = align_ns_df(ns.df)
+    except Exception:
+        logger.exception("align_ns_df(ns.df, ns.model)")
+        logger.warning("We continue and hope for the best.")
+
+    logzero.loglevel(loglevel())
+    logger.debug(" len(ns.df): %s", len(ns.df))
+    logger.debug(" ns.df[:10]: \n%s", ns.df[:10])
+
+    # update tab3
+    logger.debug("update tab3: s_cb_align()")
+    s_cb_align()
 
 
 def cb_save_xlsx(event=param.parameterized.Event):
     """Callback to button_save_xlsx (in # tab3).
+
      https://panel.holoviz.org/reference/widgets/FileDownload.html
 
     button_type (str): A button theme; should be one of 'default' (white), 'primary' (blue), 'success' (green), 'info' (yellow), or 'danger' (red)
@@ -204,8 +232,6 @@ button_align.on_click(cb_align)
 button_save_xlsx = pn.widgets.Button(name="SaveXlsx")
 button_save_xlsx.on_click(cb_save_xlsx)
 
-from pyvizbee.button_cb_save_tsv import button_save_tsv, cb_save_tsv  # pylint: disable=W,C,R  # noqa
-
 
 # sidebar callbacks  # tab1
 def s_cb_load(event=param.parameterized.Event):
@@ -229,8 +255,8 @@ def s_cb_load(event=param.parameterized.Event):
 
     tab = pn.Column(
         pn.Row(
-            file1,
-            file2,
+            ns.file1,
+            ns.file2,
             pn.Column(button_submit, button_toggle_params),
         ),
         ns.df_pane,
@@ -326,8 +352,8 @@ def s_cb_params(event=param.parameterized.Event):
     ylabel = "y"
 
     _ = [elm for elm in ns.df.text1.to_list() if elm.strip()]
-    logger.debug("first: %s", _)
-    logger.debug("second: %s", ns.df.text2.to_list())
+    logger.debug("first[:10]: %s", _[:10])
+    logger.debug("second[:10]: %s", ns.df.text2.to_list()[:10])
 
     if not (_ and ns.df.text2.to_list()):
         _ = "One or both inputs empty... nothing to do"
@@ -425,7 +451,7 @@ editors = {
     # "seq": {"type": "number", "min": 1, "step": 1},
     "text1": TextEditor(),
     "text2": TextEditor(),
-    "metric": {"type": "number", "min": -1, "max": 1, "step": 0.1},
+    "metric": {"type": "number", "min": -1, "max": 1, "step": 2},
     # 'bool': {'type': 'tickCross', 'tristate': True},
     # 'str': TextEditor(),
     # 'str': StringEditor(),
@@ -442,6 +468,7 @@ formatters = {
 # tab3
 def s_cb_align(event=param.parameterized.Event):
     """Callback2 for align tab3."""
+    #
 
     logger.debug(" s_cb_align")
 
@@ -453,7 +480,7 @@ def s_cb_align(event=param.parameterized.Event):
     ns.counter += 1
     # template.main[0].objects = [pn.Column("# Page 2", f"modi..bla bla bla {ns.counter}")]
     edit_table = pn.widgets.Tabulator(
-        ns.df,
+        value=ns.df,
         editors=editors,
         formatters=formatters,
         pagination="remote",
@@ -466,8 +493,7 @@ def s_cb_align(event=param.parameterized.Event):
     )
 
     tab = pn.Column(
-        pn.Row(button_align, button_save_xlsx, button_save_tsv),
-        # pn.Row(button_align, button_save_xlsx),
+        pn.Row(button_align, button_save_xlsx, button_save_tsv, button_show_nsdf),
         pn.layout.HSpacer(),
         edit_table,
     )
@@ -481,7 +507,7 @@ def s_cb_about(event):
     ns.counter += 1
 
     _ = """
-    # does not wokr
+    # does not work
     if ns.counter % 2:
         template.modal.objects = [about]
         logger.debug(" ns.counter: %s, modal: %s", ns.counter, pprint(template.modal))
