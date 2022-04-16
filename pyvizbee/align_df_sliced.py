@@ -7,7 +7,7 @@ from logzero import logger
 
 from fast_scores.gen_cmat import gen_cmat
 from cmat2aset import cmat2aset
-from ezbee.gen_pairs import gen_pairs
+from pyvizbee.gen_pairs import gen_pairs
 
 
 def align_df_sliced(

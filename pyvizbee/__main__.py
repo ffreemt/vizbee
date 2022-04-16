@@ -48,7 +48,7 @@ if __name__ == "__main__":
         # main(),
         template,
         title="Vizbee",
-        port=8088,
+        port=5006,
         verbose=False,
     )
 

@@ -13,14 +13,13 @@ from itertools import zip_longest
 from pyvizbee.loadtext import loadtext
 from types import SimpleNamespace
 
-# cd pipy cd ezbee
+# cd pipy cd pyvizbee
 # from add_path import add_path
 from pyvizbee.add_path import add_path  # noqa
 
-# add_path([r"..\ezbee", r"..\cmat2aset", r"..\fast-scores"])  # noqa
+# add_path([r"..\cmat2aset", r"..\fast-scores"])  # noqa
 
 from cmat2aset import cmat2aset
-from ezbee.gen_pairs import gen_pairs
 
 from fast_scores.gen_model import gen_model
 from fast_scores.gen_cmat import gen_cmat
@@ -28,6 +27,7 @@ from fast_scores.en2zh import en2zh
 from fast_scores.process_en import process_en
 from fastlid import fastlid
 
+from pyvizbee.gen_pairs import gen_pairs
 
 sns.set()
 sns.set_style("darkgrid")
@@ -35,8 +35,8 @@ sns.set_style("darkgrid")
 file_en = "text-en.txt"
 file_zh = "text-zh.txt"
 
-DEFAULT_EPS = 10
-DEFAULT_MIN_SAMPLES = 6
+default_eps = 10
+default_min_samples = 6
 
 # workspace namespace: similar to global()
 ns = SimpleNamespace(
@@ -44,8 +44,8 @@ ns = SimpleNamespace(
         "counter": 0,
         "df": None,
         "df_pane": None,
-        "eps": DEFAULT_EPS,  # Two points are considered neighbors if the distance between the two points is below eps
-        "min_samples": DEFAULT_MIN_SAMPLES,  # The minimum number of neighbors a given point should have in order to be classified as a core point.
+        "eps": default_eps,  # Two points are considered neighbors if the distance between the two points is below eps
+        "min_samples": default_min_samples,  # The minimum number of neighbors a given point should have in order to be classified as a core point.
     }
 )
 

@@ -27,39 +27,33 @@ from pyvizbee.loadtext import loadtext
 from pyvizbee.loglevel import loglevel
 
 from pyvizbee.align_ns_df import align_ns_df
-from pyvizbee.ns import ns, DEFAULT_EPS, DEFAULT_MIN_SAMPLES
+from pyvizbee.ns import ns, default_eps, default_min_samples
 
-from pyvizbee.button_cb_save_tsv import (
-    button_save_tsv,
-    # cb_save_tsv,
-)
-from pyvizbee.button_cb_show_nsdf import (
-    button_show_nsdf,
-    # cb_save_tsv,
-)
+from pyvizbee.cb_save_xlsx import cb_save_xlsx
+from pyvizbee.cb_save_tsv import cb_save_tsv
+from pyvizbee.cb_show_nsdf import cb_show_nsdf
 
 VIZBEE_DEV = os.environ.get("VIZBEE_DEV")
 
 _ = r"""
-# better set PYTHONPATH=..\ezbee;..\fast-scores;..\cmat2aset
+# better set PYTHONPATH=..\fast-scores;..\cmat2aset
 if VIZBEE_DEV:
     # from icecream import ic
     from add_path import add_path
 
     add_path(
         [
-            r"..\ezbee",
             r"..\cmat2aset",
             r"..\fast-scores",
         ]
     )
     try:
-        logger.debug(" importing ezbee")
-        # import ezbee
+        logger.debug(" importing fast_scores")
+        # import e zbee
         # import fast_scores
         from fast_scores.gen_cmat import gen_cmat  # noqa
     except Exception:
-        logger.exception("import ezbee errors")
+        logger.exception("import fast_scores errors")
 
 from cmat2aset import cmat2aset  # noqa
 from fast_scores.gen_cmat import gen_cmat  # noqa
@@ -162,8 +156,8 @@ def cb_reset(event=param.parameterized.Event):
     """Callback for the reset button (eps/min_samples)."""
     logger.debug("cb_reset")
     logger.info("cb_reset")
-    ns.eps = DEFAULT_EPS
-    ns.min_samples = DEFAULT_MIN_SAMPLES
+    ns.eps = default_eps
+    ns.min_samples = default_min_samples
     s_cb_params()
 
 
@@ -196,27 +190,7 @@ def cb_align(event=param.parameterized.Event):
     s_cb_align()
 
 
-def cb_save_xlsx(event=param.parameterized.Event):
-    """Callback to button_save_xlsx (in # tab3).
-
-     https://panel.holoviz.org/reference/widgets/FileDownload.html
-
-    button_type (str): A button theme; should be one of 'default' (white), 'primary' (blue), 'success' (green), 'info' (yellow), or 'danger' (red)
-
-    from bokeh.sampledata.autompg import autompg
-
-    from io import StringIO
-    sio = StringIO()
-    autompg.to_csv(sio)
-    sio.seek(0)
-
-    pn.widgets.FileDownload(sio, embed=True, filename='autompg.csv')
-    """
-    logger.debug("cb_save_xlsx")
-    ...
-
-
-# buttons
+# click buttons in tabs
 button_submit = pn.widgets.Button(name="Submit")
 button_submit.on_click(cb_submit)
 
@@ -229,8 +203,10 @@ button_toggle_params.on_click(cb_toggle_params)
 button_align = pn.widgets.Button(name="Align/Re-align")
 button_align.on_click(cb_align)
 
-button_save_xlsx = pn.widgets.Button(name="SaveXlsx")
-button_save_xlsx.on_click(cb_save_xlsx)
+button_show_nsdf = pn.widgets.Button(name="ShowNsdf")
+button_show_nsdf.on_click(cb_show_nsdf)
+
+# download buttons in # tab3
 
 
 # sidebar callbacks  # tab1
@@ -491,6 +467,15 @@ def s_cb_align(event=param.parameterized.Event):
         # loading=True,
         widths={"text1": 400, "text2": 400, "metric": 100},
     )
+
+    if ns.file1.name:
+        stem = Path(ns.file1.name).stem + "-ali"
+    else:
+        stem = "aligned"
+
+    # button_save_xlsx = pn.widgets.FileDownload(filename="temp.xlsx", callback=cb_save_xlsx, button_type="primary")
+    button_save_xlsx = pn.widgets.FileDownload(filename=f"{stem}.xlsx", callback=cb_save_xlsx)
+    button_save_tsv = pn.widgets.FileDownload(filename=f"{stem}.tsv", callback=cb_save_tsv)
 
     tab = pn.Column(
         pn.Row(button_align, button_save_xlsx, button_save_tsv, button_show_nsdf),
