@@ -19,8 +19,13 @@ import param
 from bokeh.models.widgets.tables import TextEditor
 from cmat2aset import cmat2aset
 from fast_scores.gen_cmat import gen_cmat
+from fast_scores.en2zh import en2zh
+from fast_scores.process_en import process_en
+from fast_scores.gen_model import gen_model
 from logzero import logger
 from unsync import unsync
+
+from fastlid import fastlid
 
 from pyvizbee import __version__
 from pyvizbee.loadtext import loadtext
@@ -111,20 +116,26 @@ def gen_df():
     # ns.df.index += 1
     ns.df.index.name = "seq"
 
-    _ = """
+    # update ns.lang1, ns.lang2; default en, zh
+    fastlid.set_languages = ["en", "zh"]
     try:
         ns.lang1, *_ = fastlid(list1)
         ns.lang2, *_ = fastlid(list2)
     except Exception:
         logger.exception(" ns.langx, *_ = fastlid(listx)")
-        loggerinfo("Continue and hope for the best...")
-
+        logger.info("Continue and hope for the best...")
     # also gen model
+
+    vec1, vec2 = list1, list2
     if ns.lang1 in ["en"]:
-        l1
+        vec1 = en2zh(process_en(list1))
+    if ns.lang2 in ["en"]:
+        vec2 = en2zh(process_en(list2))
     try:
-        ns.model = gen_model(
-    # """
+        ns.model = gen_model(vec1 + vec2)
+    except Exception:
+        logger.exception("ns.model = gen_model(vec1 + vec2)")
+        logger.info("We pretend nothing happens and hope for the best.")
 
     return ns.df
 
@@ -468,8 +479,8 @@ def s_cb_align(event=param.parameterized.Event):
         widths={"text1": 400, "text2": 400, "metric": 100},
     )
 
-    if ns.file1.name:
-        stem = Path(ns.file1.name).stem + "-ali"
+    if ns.file1.filename:
+        stem = Path(ns.file1.filename).stem + "-ali"
     else:
         stem = "aligned"
 
@@ -477,8 +488,13 @@ def s_cb_align(event=param.parameterized.Event):
     button_save_xlsx = pn.widgets.FileDownload(filename=f"{stem}.xlsx", callback=cb_save_xlsx)
     button_save_tsv = pn.widgets.FileDownload(filename=f"{stem}.tsv", callback=cb_save_tsv)
 
+    if VIZBEE_DEV:
+        _ = pn.Row(button_align, button_save_xlsx, button_save_tsv, button_show_nsdf)
+    else:  # no button_show_nsdf
+        _ = pn.Row(button_align, button_save_xlsx, button_save_tsv)
+
     tab = pn.Column(
-        pn.Row(button_align, button_save_xlsx, button_save_tsv, button_show_nsdf),
+        _,
         pn.layout.HSpacer(),
         edit_table,
     )
