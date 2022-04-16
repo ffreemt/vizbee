@@ -1,5 +1,5 @@
 """Align ns.df (df in ns)."""
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, line-too-long
 
 from itertools import zip_longest
 import pandas as pd

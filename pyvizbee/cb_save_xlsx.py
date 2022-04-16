@@ -1,4 +1,5 @@
 """Define button_save_tsv cb_save_tsv."""
+# pylint: disable=line-too-long
 import io
 import pandas as pd
 import param

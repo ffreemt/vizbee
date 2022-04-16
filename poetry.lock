@@ -214,7 +214,7 @@ python-versions = "*"
 
 [[package]]
 name = "fast-scores"
-version = "0.1.3a3"
+version = "0.1.3a4"
 description = " "
 category = "main"
 optional = false
@@ -1157,7 +1157,7 @@ plot = ["holoviews", "plotly", "seaborn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.3"
-content-hash = "57e0889338828bc583e31b0b376482637ed781ab41cbaeb2231db91b88c01a52"
+content-hash = "a2c99951b6681fe30490354b2d250369df86d01a0defb766f268dbd7fc465229"
 
 [metadata.files]
 astroid = [
@@ -1256,8 +1256,8 @@ executing = [
     {file = "executing-0.8.3.tar.gz", hash = "sha256:c6554e21c6b060590a6d3be4b82fb78f8f0194d809de5ea7df1c093763311501"},
 ]
 fast-scores = [
-    {file = "fast-scores-0.1.3a3.tar.gz", hash = "sha256:0a76f7f349ffbf507f7b1a2fd527be4a8bf633e36b7b9b45795192afd7aaac02"},
-    {file = "fast_scores-0.1.3a3-py3-none-any.whl", hash = "sha256:df4bdc93553b8fe4c513d7bf7473594634a8ec55695587beaa08bf2d3a5d5302"},
+    {file = "fast-scores-0.1.3a4.tar.gz", hash = "sha256:7974977585bd3593b5cf97356fa4a95b0d38953771a45bc5394132e1a8c9148b"},
+    {file = "fast_scores-0.1.3a4-py3-none-any.whl", hash = "sha256:19f4af9e790ae401e55f0e1ec51150a0bccecb75c53f60425fd3a010f2c22429"},
 ]
 fastlid = [
     {file = "fastlid-0.1.7-py3-none-any.whl", hash = "sha256:591dbee44ac501c9aa89abb97a13b11cf964c3b8c4add1bdf02b44d30463e18f"},

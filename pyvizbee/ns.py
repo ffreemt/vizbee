@@ -1,5 +1,5 @@
 """Prep namespace ns."""
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, line-too-long
 from pathlib import Path
 from types import SimpleNamespace
 import panel as pn

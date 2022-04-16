@@ -6,7 +6,7 @@ palette = sns.blend_palette(
     ["red", "palegreen"], N_COLORS).as_hex()
 Refer to color_table_applymap.py
 """
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, broad-except
 palette = [
     # "#f00000",
     # "#f02315",

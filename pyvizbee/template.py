@@ -1,5 +1,5 @@
 """Set up template."""
-# pylint: disable=unused-argument, unused-import, too-many-locals, too-many-statements
+# pylint: disable=unused-argument, unused-import, too-many-locals, too-many-statements, broad-except, line-too-long
 
 import os
 import time
@@ -292,7 +292,7 @@ def s_cb_params(event=param.parameterized.Event):
         return
 
     # to silence pyright
-    import holoviews as hv  # pylint: disable=W,C,R
+    import holoviews as hv  # pylint: disable=W,C,R,import-error
 
     if "off" in s_btn_params.name:
         tab = pn.Column("Click TogglePlot in the Load Files tab if you want to see plots...Plotting can take a long time and computer resources (CPU, RAM etc) for large text bodies.")

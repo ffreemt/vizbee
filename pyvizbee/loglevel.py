@@ -1,5 +1,5 @@
 """Set loglevel."""
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code, line-too-long, broad-except
 import environs
 
 

@@ -1,5 +1,5 @@
 """Gen aligned pairs for given list1 list2 and aset."""
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, broad-except
 from typing import List
 from logzero import logger
 

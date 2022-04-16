@@ -49,7 +49,8 @@ if __name__ == "__main__":
         template,
         title="Vizbee",
         port=5006,
-        verbose=False,
+        address="0.0.0.0",
+        verbose=True,
     )
 
 _ = """
