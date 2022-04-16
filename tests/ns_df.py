@@ -8,7 +8,7 @@ from pathlib import Path
 
 # import numpy as np
 import pandas as pd
-import seaborn as sns
+# import seaborn as sns
 from itertools import zip_longest
 from pyvizbee.loadtext import loadtext
 from types import SimpleNamespace
@@ -29,8 +29,8 @@ from fastlid import fastlid
 
 from pyvizbee.gen_pairs import gen_pairs
 
-sns.set()
-sns.set_style("darkgrid")
+# sns.set()
+# sns.set_style("darkgrid")
 
 file_en = "text-en.txt"
 file_zh = "text-zh.txt"
