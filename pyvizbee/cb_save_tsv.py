@@ -7,7 +7,7 @@ from pyvizbee.ns import ns
 
 
 def cb_save_tsv(event=param.parameterized.Event):
-    """Callback to save_tsv (in # tab3)."""
+    """Define callback to save_tsv (in # tab3)."""
     logger.debug("cb_save_tsv")
     ...
     output = io.BytesIO()

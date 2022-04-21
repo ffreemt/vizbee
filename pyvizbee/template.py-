@@ -1,0 +1,12 @@
+"""Set up template."""
+# pylint: disable=unused-argument, unused-import, too-many-locals, too-many-statements, broad-except, line-too-long
+
+from pyvizbee.s_cb_align import s_cb_align
+from pyvizbee.cb_sent_align import cb_sent_align
+
+button_sent_align = pn.widgets.Button(name="Sent-Align")
+button_sent_align.on_click(cb_sent_align)
+
+s_btn_align = pn.widgets.Button(name="Align/Save")
+
+s_btn_align.on_click(s_cb_align)

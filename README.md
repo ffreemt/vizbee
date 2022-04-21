@@ -22,6 +22,14 @@ or simply install the required packages (holoviews,
 plotly, seaborn), e.g. `pip install holoviews
 plotly seaborn`
 
+### Post-install
+Since `polyglot` is needed but presents some problems with dicrect pip/poetry install method, a manual installation step is required.
+
+* Linux and friends: `pip install polyglot`
+
+* Windows: download and install whl for pyicu and pycld2
+    * `pip install git+https://github.com/aboSamoor/polyglot@master`
+
 ## Use it
 ```shell
 python -m pyvizbee

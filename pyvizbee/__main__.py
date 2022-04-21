@@ -37,8 +37,6 @@ pn.extension("tabulator")
 
 s_cb_load()  # set inital page 1
 
-# dashboard = template
-
 if __name__.startswith("bokeh"):
     # main().servable(title="Vizbee Aligner")
     template.servable(title="Vizbee")
@@ -49,7 +47,9 @@ if __name__ == "__main__":
         template,
         title="Vizbee",
         port=5006,
-        address="0.0.0.0",
+        # address="0.0.0.0",  # to allow external-ip
+        # linux: export BOKEH_ALLOW_WS_ORIGIN=*
+        # win: set BOKEH_ALLOW_WS_ORIGIN=*
         verbose=True,
     )
 

@@ -1,148 +1,58 @@
-"""Set up template."""
-# pylint: disable=unused-argument, unused-import, too-many-locals, too-many-statements, broad-except, line-too-long
-
+"""Define panel dashboard."""
 import os
 import time
-from itertools import zip_longest
 from pathlib import Path
-# from pprint import pprint
 from textwrap import dedent
-# from types import SimpleNamespace
-from typing import List
 
-import cchardet as chardet
 import logzero
 import numpy as np
-import pandas as pd
 import panel as pn
 import param
 from bokeh.models.widgets.tables import TextEditor
 from cmat2aset import cmat2aset
 from fast_scores.gen_cmat import gen_cmat
-from fast_scores.en2zh import en2zh
-from fast_scores.process_en import process_en
-from fast_scores.gen_model import gen_model
 from logzero import logger
 from unsync import unsync
 
-from fastlid import fastlid
-
 from pyvizbee import __version__
-from pyvizbee.loadtext import loadtext
-from pyvizbee.loglevel import loglevel
-
 from pyvizbee.align_ns_df import align_ns_df
-from pyvizbee.ns import ns, default_eps, default_min_samples
-
-from pyvizbee.cb_save_xlsx import cb_save_xlsx
 from pyvizbee.cb_save_tsv import cb_save_tsv
-from pyvizbee.cb_show_nsdf import cb_show_nsdf
+from pyvizbee.cb_save_xlsx import cb_save_xlsx
+from pyvizbee.cb_show_nsdf import button_show_nsdf
+from pyvizbee.gen_df import gen_df
+from pyvizbee.loglevel import loglevel
+from pyvizbee.ns import default_eps, default_min_samples, ns
+from pyvizbee.sent_align_ns_df import sent_align_ns_df
 
-VIZBEE_DEV = os.environ.get("VIZBEE_DEV")
 
-_ = r"""
-# better set PYTHONPATH=..\fast-scores;..\cmat2aset
-if VIZBEE_DEV:
-    # from icecream import ic
-    from add_path import add_path
+def cb_align(event=param.parameterized.Event):
+    """Define callback to align (in tab3): button_align.on_click(cb_align)."""
+    logger.debug("cb_align")
 
-    add_path(
-        [
-            r"..\cmat2aset",
-            r"..\fast-scores",
-        ]
-    )
+    # process ns.df: align_ns_df
     try:
-        logger.debug(" importing fast_scores")
-        # import e zbee
-        # import fast_scores
-        from fast_scores.gen_cmat import gen_cmat  # noqa
+        ns.df = align_ns_df(ns.df, ns.model)
+        # ns.df = align_ns_df(ns.df)
     except Exception:
-        logger.exception("import fast_scores errors")
+        logger.exception("align_ns_df(ns.df, ns.model)")
+        logger.warning("We continue and hope for the best.")
 
-from cmat2aset import cmat2aset  # noqa
-from fast_scores.gen_cmat import gen_cmat  # noqa
-# """
+    logzero.loglevel(loglevel())
+    logger.debug(" len(ns.df): %s", len(ns.df))
+    logger.debug(" ns.df[:10]: \n%s", ns.df[:10])
 
-
-def filevalue2list(value: bytes) -> List[str]:
-    """Convert file1.value to list."""
-    if value is None:
-        return []
-
-    if not isinstance(value, bytes):
-        raise Exception("not bytes fed to me, cant handle it.")
-
-    encoding = chardet.detect(value).get("encoding") or "utf8"
-    try:
-        _ = value.decode(encoding=encoding)
-    except Exception as _:
-        logger.error(_)
-        raise
-    return [elm.strip() for elm in _.splitlines() if elm.strip()]
+    # update tab3
+    logger.debug("update tab3: s_cb_align()")
+    s_cb_align()
 
 
-def gen_df():
-    """Gen df (pandas.DataFrame) from file1.value/file2.value.
-
-    _ =  [elm for elm in ns.df.text1.to_list() if elm.strip()]
-    cmat = gen_cmat(_, ns.df.text2.to_list())
-    """
-    # global file1, file2
-
-    list1 = filevalue2list(ns.file1.value)
-    list2 = filevalue2list(ns.file2.value)
-
-    logger.debug("list1[:10]: %s", list1[:10])
-    logger.debug("list2[:10]: %s", list2[:10])
-
-    if VIZBEE_DEV:
-        # set default during dev
-        if not list1:
-            text1 = loadtext(Path(__file__).parent / "test-en.txt")
-            list1 = [elm.strip() for elm in text1.splitlines() if elm.strip()]
-        if not list2:
-            text2 = loadtext(Path(__file__).parent / "test-zh.txt")
-            list2 = [_.strip() for _ in text2.splitlines() if _.strip()]
-
-    ns.df = pd.DataFrame(
-        zip_longest(list1, list2, [], fillvalue=""),
-        columns=["text1", "text2", "metric"],
-    )
-
-    # ns.df.insert(0, "seq", range(1, 1 + len(ns.df)))
-    # ns.df = ns.df.set_index("seq")
-    # ns.df.index = [*range(1, 1 + len(ns.df))]
-    # ns.df.index += 1
-    ns.df.index.name = "seq"
-
-    # update ns.lang1, ns.lang2; default en, zh
-    fastlid.set_languages = ["en", "zh"]
-    try:
-        ns.lang1, *_ = fastlid(list1)
-        ns.lang2, *_ = fastlid(list2)
-    except Exception:
-        logger.exception(" ns.langx, *_ = fastlid(listx)")
-        logger.info("Continue and hope for the best...")
-    # also gen model
-
-    vec1, vec2 = list1, list2
-    if ns.lang1 in ["en"]:
-        vec1 = en2zh(process_en(list1))
-    if ns.lang2 in ["en"]:
-        vec2 = en2zh(process_en(list2))
-    try:
-        ns.model = gen_model(vec1 + vec2)
-    except Exception:
-        logger.exception("ns.model = gen_model(vec1 + vec2)")
-        logger.info("We pretend nothing happens and hope for the best.")
-
-    return ns.df
+button_align = pn.widgets.Button(name="Align/Re-align")
+button_align.on_click(cb_align)
 
 
 # callbacks for tab buttons
 def cb_submit(event=param.parameterized.Event):
-    """Callback for the submit button (upload)."""
+    """Define callback for the submit button (upload)."""
     # global df  # , df_pane
     ns.counter += 1
 
@@ -163,8 +73,24 @@ def cb_submit(event=param.parameterized.Event):
     s_cb_load()
 
 
+button_submit = pn.widgets.Button(name="Submit")
+button_submit.on_click(cb_submit)
+
+
+def cb_toggle_params(event=param.parameterized.Event):
+    """Define callback to toggle params tab."""
+    if "off" in s_btn_params.name:
+        s_btn_params.name = "Plot (on)"
+    else:
+        s_btn_params.name = "Plot (off)"
+
+
+button_toggle_params = pn.widgets.Button(name="TogglePlot")
+button_toggle_params.on_click(cb_toggle_params)
+
+
 def cb_reset(event=param.parameterized.Event):
-    """Callback for the reset button (eps/min_samples)."""
+    """Define callback for the reset button (eps/min_samples)."""
     logger.debug("cb_reset")
     logger.info("cb_reset")
     ns.eps = default_eps
@@ -172,24 +98,20 @@ def cb_reset(event=param.parameterized.Event):
     s_cb_params()
 
 
-def cb_toggle_params(event=param.parameterized.Event):
-    """Callback to toggle params tab."""
-    if "off" in s_btn_params.name:
-        s_btn_params.name = "Plot (on)"
-    else:
-        s_btn_params.name = "Plot (off)"
+button_reset = pn.widgets.Button(name="Reset")
+button_reset.on_click(cb_reset)
 
 
-def cb_align(event=param.parameterized.Event):
-    """Callback to align (in tab3): button_align.on_click(cb_align)."""
-    logger.debug("cb_align")
+def cb_sent_align(event=param.parameterized.Event):
+    """Define callback to sent-align (in tab3): button_sent_align.on_click(cb_sent_align)."""
+    logger.debug("cb_sent_align")
 
     # process ns.df: align_ns_df
     try:
-        ns.df = align_ns_df(ns.df, ns.model)
-        # ns.df = align_ns_df(ns.df)
+        # ns.df = align_ns_df(ns.df, ns.model)
+        ns.df = sent_align_ns_df(ns.df, lang1=ns.lang1, lang2=ns.lang2)
     except Exception:
-        logger.exception("align_ns_df(ns.df, ns.model)")
+        logger.exception("sent_align_ns_df(ns.df, lang1, lang2)")
         logger.warning("We continue and hope for the best.")
 
     logzero.loglevel(loglevel())
@@ -198,31 +120,145 @@ def cb_align(event=param.parameterized.Event):
 
     # update tab3
     logger.debug("update tab3: s_cb_align()")
+
     s_cb_align()
 
 
-# click buttons in tabs
-button_submit = pn.widgets.Button(name="Submit")
-button_submit.on_click(cb_submit)
+button_sent_align = pn.widgets.Button(name="Sent-Align")
+button_sent_align.on_click(cb_sent_align)
 
-button_reset = pn.widgets.Button(name="Reset")
-button_reset.on_click(cb_reset)
+# ===
 
-button_toggle_params = pn.widgets.Button(name="TogglePlot")
-button_toggle_params.on_click(cb_toggle_params)
+# will result in circular imports
+# from pyvizbee.s_cb_about import s_btn_about
+# from pyvizbee.s_cb_align import s_btn_align
+# from pyvizbee.s_cb_load import s_btn_load
+# from pyvizbee.s_cb_params import s_btn_params
 
-button_align = pn.widgets.Button(name="Align/Re-align")
-button_align.on_click(cb_align)
 
-button_show_nsdf = pn.widgets.Button(name="ShowNsdf")
-button_show_nsdf.on_click(cb_show_nsdf)
+# tab4 modal
+@unsync
+def s_cb_about(event=param.parameterized.Event):
+    """Define callback for about tab4 (modal)."""
+    ns.counter += 1
 
-# download buttons in # tab3
+    _ = """
+    # does not work
+    if ns.counter % 2:
+        template.modal.objects = [about]
+        logger.debug(" ns.counter: %s, modal: %s", ns.counter, pprint(template.modal))
+    else:
+        _ = pn.pane.Markdown(
+            " 111 ",
+            style={
+                "background-color": "#F6F6F6",
+                "border": "2px solid black",
+                "border-radius": "5px",
+                "padding": "14px",
+                "font-size": "medium",
+                "color": "#10874a",  # "coral",
+            },
+        )
+        template.modal.objects = [_]
+        logger.debug(" ns.counter: %s, modal: %s", ns.counter, pprint(template.modal))
+    # """
+
+    template.open_modal()
+    time.sleep(10)
+    template.close_modal()
+
+
+s_btn_about = pn.widgets.Button(name="About")
+s_btn_about.on_click(s_cb_about)  # modi
+
+VIZBEE_DEV = os.environ.get("VIZBEE_DEV")
+
+editors = {
+    # "text1": StringEditor(),
+    # "seq": {"type": "number", "min": 1, "step": 1},
+    "text1": TextEditor(),
+    "text2": TextEditor(),
+    "metric": {"type": "number", "min": -1, "max": 1, "step": 2},
+    # 'bool': {'type': 'tickCross', 'tristate': True},
+    # 'str': TextEditor(),
+    # 'str': StringEditor(),
+    # 'str': {'type': 'string','values': True},
+}
+formatters = {
+    # "seq": {},
+    "text1": {"type": "textarea"},
+    "text2": {"type": "textarea"},
+    "metric": {"type": "progress", "max": 1, "min": 0},
+}
+
+
+# tab3
+def s_cb_align(event=param.parameterized.Event):
+    """Callback2 for align tab3."""
+    #
+
+    logger.debug(" s_cb_align")
+
+    if ns.df is None:
+        tab = pn.Column(" Load files first...")
+        template.main[0].objects = [tab]
+        return
+
+    ns.counter += 1
+    # template.main[0].objects = [pn.Column("# Page 2", f"modi..bla bla bla {ns.counter}")]
+    edit_table = pn.widgets.Tabulator(
+        value=ns.df,
+        editors=editors,
+        formatters=formatters,
+        pagination="remote",
+        # page_size=50,
+        # max_height=60,
+        row_height=60,
+        max_width=1500,
+        # loading=True,
+        widths={"text1": 400, "text2": 400, "metric": 100},
+    )
+
+    if ns.file1.filename:
+        stem = Path(ns.file1.filename).stem + "-ali"
+    else:
+        stem = "aligned"
+
+    # button_save_xlsx = pn.widgets.FileDownload(filename="temp.xlsx", callback=cb_save_xlsx, button_type="primary")
+    button_save_xlsx = pn.widgets.FileDownload(filename=f"{stem}.xlsx", callback=cb_save_xlsx)
+    button_save_tsv = pn.widgets.FileDownload(filename=f"{stem}.tsv", callback=cb_save_tsv)
+
+    if VIZBEE_DEV:
+        _ = pn.Row(
+            button_align,
+            button_sent_align,            
+            button_save_xlsx, 
+            button_save_tsv, 
+            button_show_nsdf,
+        )
+    else:  # no button_show_nsdf
+        _ = pn.Row(
+            button_align, 
+            button_sent_align, 
+            button_save_xlsx, 
+            button_save_tsv
+        )
+
+    tab = pn.Column(
+        _,
+        pn.layout.HSpacer(),
+        edit_table,
+    )
+    template.main[0].objects = [tab]
+
+
+s_btn_align = pn.widgets.Button(name="Align/Save")
+s_btn_align.on_click(s_cb_align)
 
 
 # sidebar callbacks  # tab1
 def s_cb_load(event=param.parameterized.Event):
-    """Callback1 for tab1 (submit) tab1."""
+    """Define callback for tab1 (submit) tab1."""
     # global df, df_pane
 
     ns.counter += 1
@@ -254,10 +290,14 @@ def s_cb_load(event=param.parameterized.Event):
     return "Page 1"
 
 
+s_btn_load = pn.widgets.Button(name="Load Files")
+s_btn_load.on_click(s_cb_load)
+
+
 # tab2
 @unsync
 def s_cb_params(event=param.parameterized.Event):
-    """Callback for (params) tab2.
+    """Define callback for (params) tab2.
 
     int_slider = pn.widgets.IntSlider(name='Integer Slider', start=0, end=8, step=2, value=4)
 
@@ -269,6 +309,19 @@ def s_cb_params(event=param.parameterized.Event):
             radio_button_display.object = f'Radio Button Value: {radio_button.value}'
     radio_button.param.watch(update, "value")
     """
+    if "off" in s_btn_params.name:
+        tab = pn.Column("Click TogglePlot in the Load Files tab if you want to see plots...Plotting can take a long time and computer resources (CPU, RAM etc) for large text bodies.")
+
+        # https://panel.holoviz.org/reference/panes/Alert.html
+        # primary, secondary, success, danger, warning, info, light, dark
+        # alert = pn.pane.Alert("success! ", alert_type="success")
+        alert = pn.pane.Alert("Plotting is off! ", alert_type="warning")
+
+        template.main[0].objects = [alert]
+        time.sleep(3)
+        template.main[0].objects = [tab]
+        return
+
     try:
         import holoviews as hv  # pylint: disable=W,C,R
         pn.extension("plotly")
@@ -293,19 +346,6 @@ def s_cb_params(event=param.parameterized.Event):
 
     # to silence pyright
     import holoviews as hv  # pylint: disable=W,C,R,import-error
-
-    if "off" in s_btn_params.name:
-        tab = pn.Column("Click TogglePlot in the Load Files tab if you want to see plots...Plotting can take a long time and computer resources (CPU, RAM etc) for large text bodies.")
-
-        # https://panel.holoviz.org/reference/panes/Alert.html
-        # primary, secondary, success, danger, warning, info, light, dark
-        # alert = pn.pane.Alert("success! ", alert_type="success")
-        alert = pn.pane.Alert("Plotting is off! ", alert_type="warning")
-
-        template.main[0].objects = [alert]
-        time.sleep(3)
-        template.main[0].objects = [tab]
-        return
 
     if ns.df is None:
         tab = pn.Column(" Load files first...")
@@ -433,117 +473,10 @@ def s_cb_params(event=param.parameterized.Event):
     # return "Params tab"
 
 
-editors = {
-    # "text1": StringEditor(),
-    # "seq": {"type": "number", "min": 1, "step": 1},
-    "text1": TextEditor(),
-    "text2": TextEditor(),
-    "metric": {"type": "number", "min": -1, "max": 1, "step": 2},
-    # 'bool': {'type': 'tickCross', 'tristate': True},
-    # 'str': TextEditor(),
-    # 'str': StringEditor(),
-    # 'str': {'type': 'string','values': True},
-}
-formatters = {
-    # "seq": {},
-    "text1": {"type": "textarea"},
-    "text2": {"type": "textarea"},
-    "metric": {"type": "progress", "max": 1, "min": 0},
-}
-
-
-# tab3
-def s_cb_align(event=param.parameterized.Event):
-    """Callback2 for align tab3."""
-    #
-
-    logger.debug(" s_cb_align")
-
-    if ns.df is None:
-        tab = pn.Column(" Load files first...")
-        template.main[0].objects = [tab]
-        return
-
-    ns.counter += 1
-    # template.main[0].objects = [pn.Column("# Page 2", f"modi..bla bla bla {ns.counter}")]
-    edit_table = pn.widgets.Tabulator(
-        value=ns.df,
-        editors=editors,
-        formatters=formatters,
-        pagination="remote",
-        # page_size=50,
-        # max_height=60,
-        row_height=60,
-        max_width=1500,
-        # loading=True,
-        widths={"text1": 400, "text2": 400, "metric": 100},
-    )
-
-    if ns.file1.filename:
-        stem = Path(ns.file1.filename).stem + "-ali"
-    else:
-        stem = "aligned"
-
-    # button_save_xlsx = pn.widgets.FileDownload(filename="temp.xlsx", callback=cb_save_xlsx, button_type="primary")
-    button_save_xlsx = pn.widgets.FileDownload(filename=f"{stem}.xlsx", callback=cb_save_xlsx)
-    button_save_tsv = pn.widgets.FileDownload(filename=f"{stem}.tsv", callback=cb_save_tsv)
-
-    if VIZBEE_DEV:
-        _ = pn.Row(button_align, button_save_xlsx, button_save_tsv, button_show_nsdf)
-    else:  # no button_show_nsdf
-        _ = pn.Row(button_align, button_save_xlsx, button_save_tsv)
-
-    tab = pn.Column(
-        _,
-        pn.layout.HSpacer(),
-        edit_table,
-    )
-    template.main[0].objects = [tab]
-
-
-# tab4 modal
-@unsync
-def s_cb_about(event):
-    """Callback for about tab4 (modal)."""
-    ns.counter += 1
-
-    _ = """
-    # does not work
-    if ns.counter % 2:
-        template.modal.objects = [about]
-        logger.debug(" ns.counter: %s, modal: %s", ns.counter, pprint(template.modal))
-    else:
-        _ = pn.pane.Markdown(
-            " 111 ",
-            style={
-                "background-color": "#F6F6F6",
-                "border": "2px solid black",
-                "border-radius": "5px",
-                "padding": "14px",
-                "font-size": "medium",
-                "color": "#10874a",  # "coral",
-            },
-        )
-        template.modal.objects = [_]
-        logger.debug(" ns.counter: %s, modal: %s", ns.counter, pprint(template.modal))
-    # """
-
-    template.open_modal()
-    time.sleep(10)
-    template.close_modal()
-
-
-# modi sidebar button
-s_btn_load = pn.widgets.Button(name="Load Files")
 s_btn_params = pn.widgets.Button(name="Plot (off)")
-s_btn_align = pn.widgets.Button(name="Align/Save")
-s_btn_about = pn.widgets.Button(name="About")
-
-# modi sidebar buttons
-s_btn_load.on_click(s_cb_load)
 s_btn_params.on_click(s_cb_params)
-s_btn_align.on_click(s_cb_align)
-s_btn_about.on_click(s_cb_about)  # modi
+
+# ===
 
 page = pn.Column(sizing_mode="stretch_width")
 

@@ -78,13 +78,17 @@ cmat_10 = gen_cmat(list1[:10], list2[:10], model=model)
 aset = cmat2aset(cmat_10)
 res = gen_pairs(list1[:10], list2[:20], aset)
 df10 = pd.DataFrame(res, columns=ns.df.columns)
-df10a = df10.append(ns.df.iloc[11:, :])
+
+# df10a = df10.append(ns.df.iloc[11:, :])
+df10a = pd.concat([df10, ns.df.iloc[11:, :]])
 
 # pd.concat([df_update, df], axis=0, ignore_index=True)
 # or concat assign set_index https://sparkbyexamples.com/pandas/pandas-add-column-to-dataframe/#:~:text=In%20pandas%20you%20can%20add,after%20adding%20a%20new%20column.
 
 df10a.insert(0, "seq", range(1, len(df10a) + 1))
 df10a.set_index('seq', inplace=True)
+
+assert True
 
 # df10.assign(
 

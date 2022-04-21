@@ -9,7 +9,7 @@ from pyvizbee.color_map import color_map
 
 
 def cb_save_xlsx(event=param.parameterized.Event):
-    """Callback to button_save_xlsx (in # tab3).
+    """Define callback to button_save_xlsx (in # tab3).
 
     https://panel.holoviz.org/reference/widgets/FileDownload.html
 
